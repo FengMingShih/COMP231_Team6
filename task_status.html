@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Status Update</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Update Task Status</h1>
+  <form id="statusForm">
+    <label for="taskId">Task ID:</label>
+    <input type="text" id="taskId" required>
+    
+    <label for="status">Status:</label>
+    <select id="status">
+      <option value="in progress">In Progress</option>
+      <option value="completed">Completed</option>
+    </select>
+    
+    <button type="submit">Update Status</button>
+  </form>
+  
+  <script src="task_status.js"></script>
+</body>
+</html>
+
+

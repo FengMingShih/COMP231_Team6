@@ -39,24 +39,21 @@ app.get('/', (req, res) => {
 });
 
 // Serve the task view page (task_view.html)
-app.get('/task_view', async (req, res) => {
-  try {
-    const tasks = await Task.find();
+app.get('/task_view', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'task_view.html'));
-  } catch (err) {
-    res.status(500).send('Error fetching tasks');
-  }
-});
+  });
+  
 
 // API to get all tasks
 app.get('/api/tasks', async (req, res) => {
-  try {
-    const tasks = await Task.find();
-    res.json(tasks);
-  } catch (err) {
-    res.status(500).send('Error fetching tasks');
-  }
-});
+    try {
+      const tasks = await Task.find();
+      res.json(tasks);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+      res.status(500).send('Error fetching tasks');
+    }
+  });
 
 // API to create a task
 app.post('/api/tasks', async (req, res) => {

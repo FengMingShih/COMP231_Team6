@@ -6,14 +6,13 @@ const app = express();
 // MongoDB Atlas connection
 const dbURI = process.env.MONGO_URI; // Use environment variable for MongoDB URI
 
-mongoose.connect(dbURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('Connected to MongoDB Atlas');
-}).catch(err => {
-  console.log('Error connecting to MongoDB:', err);
-});
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('Connected to MongoDB');
+  })
+  .catch((err) => {
+    console.error('Error connecting to MongoDB:', err);
+  });
 
 // Define the Task model
 const taskSchema = new mongoose.Schema({
@@ -44,16 +43,17 @@ app.get('/task_view', (req, res) => {
   });
   
 
-// API to get all tasks
+// Fetch all tasks from the database
 app.get('/api/tasks', async (req, res) => {
     try {
-      const tasks = await Task.find();
-      res.json(tasks);
+      const tasks = await Task.find();  // Assuming Task is your Mongoose model
+      res.json(tasks);  // Send the tasks as JSON
     } catch (err) {
-      console.error('Error fetching tasks:', err);
-      res.status(500).send('Error fetching tasks');
+      console.error('Error fetching tasks:', err);  // Log error for debugging
+      res.status(500).json({ message: 'Error fetching tasks' });  // Return error as JSON
     }
   });
+  
 
 // API to create a task
 app.post('/api/tasks', async (req, res) => {

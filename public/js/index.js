@@ -1,132 +1,164 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const taskForm = document.getElementById('task-form');
-    const taskModal = document.getElementById('task-modal');
-    const taskTable = document.getElementById('tasks-table');
-    const taskContainer = document.getElementById('tasks-container');
-    const addTaskBtn = document.getElementById('add-task-btn');
-    const closeModalBtn = document.getElementById('close-modal');
-    const taskIdInput = document.getElementById('taskId');  // Hidden field for task ID
-  
-    // Function to fetch and display tasks
-    async function fetchTasks() {
-      try {
-        const response = await fetch('/api/tasks');
-        const tasks = await response.json();
-        renderTasks(tasks);
-      } catch (err) {
-        console.error('Error fetching tasks:', err);
-      }
-    }
-  
-    // Function to render tasks in the table
-    function renderTasks(tasks) {
-      taskContainer.innerHTML = '';
-      tasks.forEach(task => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${task.taskTitle}</td>
-          <td>${task.assignedTo}</td>
-          <td>${task.taskContent}</td>
-          <td>${new Date(task.estimatedTime).toLocaleString()}</td>
-          <td>
-            <button class="edit-btn" data-id="${task._id}">Edit</button>
-            <button class="delete-btn" data-id="${task._id}">Delete</button>
-          </td>
-        `;
-        taskContainer.appendChild(row);
-      });
-  
-      // Add event listeners to edit and delete buttons
-      const editButtons = document.querySelectorAll('.edit-btn');
-      const deleteButtons = document.querySelectorAll('.delete-btn');
-  
-      editButtons.forEach(button => {
-        button.addEventListener('click', handleEdit);
-      });
-  
-      deleteButtons.forEach(button => {
-        button.addEventListener('click', handleDelete);
-      });
-    }
-  
-    // Function to handle editing a task
-    async function handleEdit(e) {
-      const taskId = e.target.dataset.id;
-      try {
-        const response = await fetch(`/api/tasks/${taskId}`);
-        const task = await response.json();
-        // Fill the form with task data for editing
-        document.getElementById('taskTitle').value = task.taskTitle;
-        document.getElementById('assignedTo').value = task.assignedTo;
-        document.getElementById('taskContent').value = task.taskContent;
-        document.getElementById('estimatedTime').value = new Date(task.estimatedTime).toISOString().slice(0, 16);
-        taskIdInput.value = task._id;  // Set the hidden task ID field
-        taskModal.style.display = 'block';
-      } catch (err) {
-        console.error('Error fetching task:', err);
-      }
-    }
-  
-    // Function to handle deleting a task
-    async function handleDelete(e) {
-      const taskId = e.target.dataset.id;
-      try {
-        await fetch(`/api/tasks/${taskId}`, {
-          method: 'DELETE',
+document.addEventListener('DOMContentLoaded', () => {
+    // Fetch tasks when the page loads
+    fetch('/api/tasks')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error fetching tasks: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        const tasksContainer = document.getElementById('tasks-container');
+        // Clear any existing tasks in the container
+        tasksContainer.innerHTML = '';
+        data.forEach(task => {
+          const taskRow = document.createElement('tr');
+          taskRow.innerHTML = `
+            <td>${task.taskTitle}</td>
+            <td>${task.assignedTo}</td>
+            <td>${task.taskContent}</td>
+            <td>${new Date(task.estimatedTime).toLocaleString()}</td>
+            <td>
+              <button onclick="editTask('${task._id}')">Edit</button>
+              <button onclick="deleteTask('${task._id}')">Delete</button>
+            </td>
+          `;
+          tasksContainer.appendChild(taskRow);
         });
-        fetchTasks();  // Re-fetch tasks after deletion
-      } catch (err) {
-        console.error('Error deleting task:', err);
-      }
-    }
+      })
+      .catch(error => {
+        console.error('Error fetching tasks:', error);
+        // Display error message to the user
+        const tasksContainer = document.getElementById('tasks-container');
+        tasksContainer.innerHTML = '<tr><td colspan="5">Error fetching tasks. Please try again later.</td></tr>';
+      });
   
-    // Function to handle form submission (add or update a task)
-    taskForm.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const taskId = taskIdInput.value;
+    // Handle task creation
+    const taskForm = document.getElementById('task-form');
+    taskForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+  
+      const taskTitle = document.getElementById('taskTitle').value;
+      const assignedTo = document.getElementById('assignedTo').value;
+      const taskContent = document.getElementById('taskContent').value;
+      const estimatedTime = document.getElementById('estimatedTime').value;
+  
       const taskData = {
-        taskTitle: document.getElementById('taskTitle').value,
-        assignedTo: document.getElementById('assignedTo').value,
-        taskContent: document.getElementById('taskContent').value,
-        estimatedTime: document.getElementById('estimatedTime').value,
+        taskTitle,
+        assignedTo,
+        taskContent,
+        estimatedTime
       };
   
-      const method = taskId ? 'PUT' : 'POST';
-      const url = taskId ? `/api/tasks/${taskId}` : '/api/tasks';
+      fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(taskData)
+      })
+        .then(response => response.json())
+        .then(data => {
+          // Add the new task to the table
+          const taskRow = document.createElement('tr');
+          taskRow.innerHTML = `
+            <td>${data.taskTitle}</td>
+            <td>${data.assignedTo}</td>
+            <td>${data.taskContent}</td>
+            <td>${new Date(data.estimatedTime).toLocaleString()}</td>
+            <td>
+              <button onclick="editTask('${data._id}')">Edit</button>
+              <button onclick="deleteTask('${data._id}')">Delete</button>
+            </td>
+          `;
+          document.getElementById('tasks-container').appendChild(taskRow);
   
-      try {
-        const response = await fetch(url, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(taskData),
+          // Clear the form fields
+          taskForm.reset();
+          // Close the modal
+          document.getElementById('task-modal').style.display = 'none';
+        })
+        .catch(error => {
+          console.error('Error creating task:', error);
+          alert('Failed to create task');
         });
-  
-        if (response.ok) {
-          fetchTasks();  // Re-fetch tasks after adding or updating
-          taskModal.style.display = 'none';  // Close modal
-        }
-      } catch (err) {
-        console.error('Error saving task:', err);
-      }
     });
-  
-    // Open the modal for adding a new task
-    addTaskBtn.addEventListener('click', function () {
-      taskModal.style.display = 'block';
-      document.getElementById('task-form').reset();  // Reset the form
-      taskIdInput.value = '';  // Reset hidden task ID
-      document.getElementById('modal-title').textContent = 'Add New Task';  // Change modal title
-    });
-  
-    // Close the modal
-    closeModalBtn.addEventListener('click', function () {
-      taskModal.style.display = 'none';
-    });
-  
-    // Fetch tasks on page load
-    fetchTasks();
   });
-
-  // new
+  
+  // Edit task function
+  function editTask(taskId) {
+    // Fetch task data by ID for editing (add an endpoint to handle this)
+    fetch(`/api/tasks/${taskId}`)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('taskTitle').value = data.taskTitle;
+        document.getElementById('assignedTo').value = data.assignedTo;
+        document.getElementById('taskContent').value = data.taskContent;
+        document.getElementById('estimatedTime').value = new Date(data.estimatedTime).toISOString().slice(0, 16);
+        // Change modal title to "Edit Task"
+        document.getElementById('modal-title').textContent = 'Edit Task';
+        // Display the modal
+        document.getElementById('task-modal').style.display = 'block';
+  
+        // Update the task on form submit
+        const taskForm = document.getElementById('task-form');
+        taskForm.onsubmit = function (event) {
+          event.preventDefault();
+  
+          const updatedTaskData = {
+            taskTitle: document.getElementById('taskTitle').value,
+            assignedTo: document.getElementById('assignedTo').value,
+            taskContent: document.getElementById('taskContent').value,
+            estimatedTime: document.getElementById('estimatedTime').value
+          };
+  
+          fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedTaskData)
+          })
+            .then(response => response.json())
+            .then(updatedTask => {
+              // Update task in the table
+              const taskRow = document.querySelector(`button[onclick="editTask('${taskId}')"]`).parentElement.parentElement;
+              taskRow.innerHTML = `
+                <td>${updatedTask.taskTitle}</td>
+                <td>${updatedTask.assignedTo}</td>
+                <td>${updatedTask.taskContent}</td>
+                <td>${new Date(updatedTask.estimatedTime).toLocaleString()}</td>
+                <td>
+                  <button onclick="editTask('${updatedTask._id}')">Edit</button>
+                  <button onclick="deleteTask('${updatedTask._id}')">Delete</button>
+                </td>
+              `;
+  
+              // Close the modal
+              document.getElementById('task-modal').style.display = 'none';
+            })
+            .catch(error => {
+              console.error('Error updating task:', error);
+              alert('Failed to update task');
+            });
+        };
+      })
+      .catch(error => {
+        console.error('Error fetching task:', error);
+      });
+  }
+  
+  // Delete task function
+  function deleteTask(taskId) {
+    fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
+      .then(() => {
+        // Remove the task row from the table
+        const taskRow = document.querySelector(`button[onclick="deleteTask('${taskId}')"]`).parentElement.parentElement;
+        taskRow.remove();
+      })
+      .catch(error => {
+        console.error('Error deleting task:', error);
+        alert('Failed to delete task');
+      });
+  }
+  

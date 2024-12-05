@@ -4,7 +4,7 @@ const path = require('path');
 const app = express();
 
 // MongoDB Atlas connection
-const dbURI = 'mongodb+srv://fengmingshih:12345@cluster0.7tcf6tr.mongodb.net/TaskManagementSystem?retryWrites=true&w=majority';
+const dbURI = process.env.MONGO_URI; // Use environment variable for MongoDB URI
 
 mongoose.connect(dbURI, {
   useNewUrlParser: true,
@@ -17,12 +17,12 @@ mongoose.connect(dbURI, {
 
 // Define the Task model
 const taskSchema = new mongoose.Schema({
-    taskTitle: String,
-    assignedTo: String,
-    taskContent: String,
-    estimatedTime: Date,
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+  taskTitle: String,
+  assignedTo: String,
+  taskContent: String,
+  estimatedTime: Date,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 const Task = mongoose.model('Task', taskSchema);
 
@@ -35,14 +35,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve the home page (index.html)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'index.html'));  // Ensure it serves index.html
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
 // Serve the task view page (task_view.html)
 app.get('/task_view', async (req, res) => {
   try {
     const tasks = await Task.find();
-    res.sendFile(path.join(__dirname, 'views', 'task_view.html'));  // Ensure it serves task_view.html
+    res.sendFile(path.join(__dirname, 'views', 'task_view.html'));
   } catch (err) {
     res.status(500).send('Error fetching tasks');
   }
@@ -56,16 +56,6 @@ app.get('/api/tasks', async (req, res) => {
   } catch (err) {
     res.status(500).send('Error fetching tasks');
   }
-});
-
-// API to get a task by ID
-app.get('/api/tasks/:id', async (req, res) => {
-    try {
-      const task = await Task.findById(req.params.id);
-      res.json(task);
-    } catch (err) {
-      res.status(500).send('Error fetching task');
-    }
 });
 
 // API to create a task
@@ -101,7 +91,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
 });
 
 // Start the server
-const port = process.env.PORT || 5500;
+const port = process.env.PORT || 8080; // Railway uses 8080 by default
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

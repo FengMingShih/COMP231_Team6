@@ -3,10 +3,9 @@ const mongoose = require('mongoose');
 const path = require('path');
 const app = express();
 
-// MongoDB Atlas connection string
+// MongoDB Atlas connection
 const dbURI = 'mongodb+srv://fengmingshih:12345@cluster0.7tcf6tr.mongodb.net/TaskManagementSystem?retryWrites=true&w=majority';
 
-// MongoDB connection
 mongoose.connect(dbURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -102,7 +101,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
 });
 
 // Start the server
-const port = 5500; // Use a fixed port for both local and Railway
+const port = process.env.PORT || 5500;
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

@@ -26,6 +26,33 @@ const taskSchema = new mongoose.Schema({
 });
 const Task = mongoose.model('Task', taskSchema);
 
+// Define the User schema
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  email: { type: String, required: true },
+  passwordHash: { type: String, required: true },
+  role: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+const User = mongoose.model('User', userSchema);
+
+// Async function to fetch users
+/*const fetchUsers = async () => {
+  try {
+    const users = await User.find({});  // Use await here
+    console.log('Fetched users:', users);  // This will show all the users in the database
+  } catch (err) {
+    console.error('Error:', err);  // Handle any error that occurs
+  } finally {
+    mongoose.connection.close();  // Close the connection after querying
+  }
+};*/
+
+// Call the function to fetch users
+//fetchUsers();
+
+
 // Middleware to parse request bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -99,6 +126,34 @@ app.delete('/api/tasks/:id', async (req, res) => {
     res.status(500).send('Error deleting task');
   }
 });
+
+
+
+// Serve the view users page (view_users.html)
+app.get('/view_users', async (req, res) => {
+  try {
+    const users = await User.find(); // This will fetch all users
+    res.sendFile(path.join(__dirname, 'views', 'view_users.html')); // Serve the view_users.html file
+  } catch (err) {
+    console.error('Error fetching users:', err);  // Log the error
+    res.status(500).send('Error fetching users');  // Return an error if there's an issue
+  }
+});
+
+// API to get all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find();  // Fetch all users from the users collection
+    console.log('Users fetched from database:', users);  // Log the users
+    res.json(users);  // Send the users in JSON format
+  } catch (err) {
+    console.error('Error fetching users:', err);  // Log any error
+    res.status(500).send('Error fetching users');
+  }
+});
+
+
+
 
 // Start the server
 const port = process.env.PORT || 5500;

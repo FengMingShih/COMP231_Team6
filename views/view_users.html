@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Accounts</title>
-  <link rel="stylesheet" href="/css/styles.css"> <!-- Adjusted path -->
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <header>
@@ -19,8 +19,11 @@
   <main>
     <section>
       <h2>All User Accounts</h2>
-      <!--<button id="add-task-btn">Add New Task</button>-->
+      
+      <!-- Button to add new user -->
+      <button id="add-user-btn">Add New User</button>
 
+      <!-- Table to display users -->
       <table>
         <thead>
           <tr>
@@ -29,19 +32,39 @@
             <th>Email</th>
             <th>Role</th>
             <th>Created At</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="user-table"></tbody>
       </table>
     </section>
 
+    <!-- Add/Edit User Form (hidden by default) -->
+    <div id="user-form-container" style="display:none;">
+      <h2 id="form-title">Add New User</h2>
+      <form id="user-form">
+        <input type="hidden" id="user-id" />
+        <label for="username">Username</label>
+        <input type="text" id="username" required />
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
+        <label for="role">Role</label>
+        <select id="role">
+          <option value="viewer">Viewer</option>
+          <option value="editor">Editor</option>
+          <option value="administrator">Administrator</option>
+        </select>
+        <button type="submit" id="submit-btn">Submit</button>
+        <button type="button" id="cancel-btn">Cancel</button>
+      </form>
+    </div>
+
   </main>
   
-
   <footer>
     <p>&copy; 2024 Task Management System</p>
   </footer>
 
-  <script src="/js/view_users.js"></script> <!-- Adjusted path -->
+  <script src="/js/view_users.js"></script>
 </body>
 </html>

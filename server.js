@@ -30,7 +30,8 @@ const Task = mongoose.model('Task', taskSchema);
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true },
-  passwordHash: { type: String, required: true },
+  //passwordHash: { type: String, required: true },
+  passwordHash: { type: String },
   role: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -144,13 +145,87 @@ app.get('/view_users', async (req, res) => {
 app.get('/api/users', async (req, res) => {
   try {
     const users = await User.find();  // Fetch all users from the users collection
-    console.log('Users fetched from database:', users);  // Log the users
+    //console.log('Users fetched from database:', users);  // Log the users
     res.json(users);  // Send the users in JSON format
   } catch (err) {
     console.error('Error fetching users:', err);  // Log any error
     res.status(500).send('Error fetching users');
   }
 });
+
+// POST (Add) a new user
+app.post('/api/users', async (req, res) => {
+  const { username, email, role } = req.body;
+
+  const newUser = new User({
+    username,
+    email,
+    role,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+
+  try {
+    await newUser.save();
+    res.status(201).json(newUser);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error adding user' });
+  }
+});
+
+// API routes (Add the GET route to fetch user by ID)
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);  // Find the user by ID
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);  // Return the user data
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching user' });
+  }
+});
+
+// PUT (Update) a user by ID
+app.put('/api/users/:id', async (req, res) => {
+  const { username, email, role } = req.body;
+
+  try {
+    // Update the user with the new data
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, {
+      username,
+      email,
+      role,
+      updatedAt: new Date() // Update the updatedAt field
+    }, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(updatedUser);  // Return the updated user
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating user' });
+  }
+});
+
+// DELETE a user by ID
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+});
+
 
 
 
